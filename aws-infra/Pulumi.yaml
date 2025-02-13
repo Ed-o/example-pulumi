@@ -1,0 +1,16 @@
+name: aws-infra
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: AWS Infra pipeline
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript
+  companyURL: "companyname.com"
+  highAvailability: true
+  dbBackupRetentionPeriodDaily: 7
+  dbBackupRetentionPeriodMonthly: 1
+  worthkeeping: false
+  dnsValidationWait: false

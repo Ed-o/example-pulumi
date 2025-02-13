@@ -1,0 +1,42 @@
+config:
+  ##### General Account setup
+  aws-infra:infraName: "eu-test1"
+  aws-infra:region: "eu-west-1"
+  aws-infra:account: "987654321234"
+  aws-infra:worthkeeping: "false"
+
+  ##### Network Setup
+  aws-infra:deployBaseNetwork: true
+  aws-infra:highAvailability: "true"
+  aws-infra:networkSetup: "new"    # new/existing
+  # If New
+  aws-infra:netZone1: "eu-west-1a"
+  aws-infra:netZone2: "eu-west-1b"
+  aws-infra:netCidrBlock: "10.5.0.0/21"
+  aws-infra:netPriv1: "10.5.1.0/24"
+  aws-infra:netPriv2: "10.5.2.0/24"
+  aws-infra:netPubl1: "10.5.4.0/24"
+  aws-infra:netPubl2: "10.5.5.0/24"
+  # If existing
+  aws-infra:existingVpc: "vpc-98765432123456789"
+  aws-infra:existingPublic:  [ "subnet-1234567891", "subnet-1234567892" ]
+  aws-infra:existingPrivate: [ "subnet-1234567893", "subnet-1234567894" ]
+
+  ##### Platform
+  aws-infra:deployPlatform: false
+  aws-infra:dbServerless: "false"
+  aws-infra:dbSize: "db.t3.micro"
+  aws-infra:dbStorage: "30"
+
+  ##### Logging / Monitoring
+  aws-infra:deployLogging: true
+  aws-infra:monEnabled: "true"
+  aws-infra:monInstanceType: "t3.micro"
+  aws-infra:monDesiredCount: "1"
+  aws-infra:logGroups:
+  ##### Misc Items
+  aws-infra:bucketName: "test1-bucket"
+
+encryptionsalt: v1:123456789==
+backend:
+  url: s3://pulumi-eu-test1
