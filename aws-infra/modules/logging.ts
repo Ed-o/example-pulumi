@@ -4,12 +4,11 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as network from "./network" ;
 import * as dns from "./dns" ;
-	
+import * as secrets from "./secrets" ;
+
 // -------- Get config values --------
 const config = new pulumi.Config();
 // Get configuration values from the Pulumi.{stack}.yaml file
-const monEnabled = config.require("monEnabled");
-const monInstanceType = config.require("monInstanceType");
 const monDesiredCount = config.requireNumber("monDesiredCount");
 const accountId = config.require("account");
 const region = config.require("region");
@@ -23,7 +22,7 @@ if (deployLogging) {
 	// -------- Logging and Monitoring --------
 	
 	// ECS Cluster
-	const cluster = new aws.ecs.Cluster("logging-cluster", {
+	const cluster = new aws.ecs.Cluster(`logging-cluster-${infraName}`, {
 	    settings: [{
 	        name: "containerInsights",
 	        value: "enabled",
@@ -35,7 +34,6 @@ if (deployLogging) {
 	    vpcId: network.vpc.id,
 	    ingress: [
 	        { protocol: "tcp", fromPort: 3100, toPort: 3100, cidrBlocks: ["10.0.0.0/8"], description: "Loki" },
-	//        { protocol: "tcp", fromPort: 3100, toPort: 3100, securityGroup: lokilambdaSecurityGroup.id, description: "Loki" },
 	        { protocol: "tcp", fromPort: 9095, toPort: 9095, cidrBlocks: ["10.0.0.0/8"], description: "Loki grpc port" },
 	        { protocol: "tcp", fromPort: 3000, toPort: 3000, cidrBlocks: ["10.0.0.0/8"], description: "Grafana" },
 	        { protocol: "tcp", fromPort: 9090, toPort: 9090, cidrBlocks: ["10.0.0.0/8"], description: "Prometheus" },
@@ -49,12 +47,10 @@ if (deployLogging) {
 	const monitorSecurityGroup = new aws.ec2.SecurityGroup("monitor-security-group", {
 	    vpcId: network.vpc.id,
 	    ingress: [
-	        { protocol: "tcp", fromPort: 80,   toPort: 80,   cidrBlocks: ["63.35.0.61/32"], description: "Web access VPN" },
-	        { protocol: "tcp", fromPort: 443,  toPort: 443,  cidrBlocks: ["63.35.0.61/32"], description: "Web access VPN" },
-	        { protocol: "tcp", fromPort: 80,   toPort: 80,   cidrBlocks: ["86.47.138.178/32"], description: "Web access Cork Office" },
-	        { protocol: "tcp", fromPort: 443,  toPort: 443,  cidrBlocks: ["86.47.138.178/32"], description: "Web access Cork Office" },
-	        { protocol: "tcp", fromPort: 80,   toPort: 80,   cidrBlocks: ["176.61.84.168/32"], description: "Web access Ed - test" },
-	        { protocol: "tcp", fromPort: 443,  toPort: 443,  cidrBlocks: ["176.61.84.168/32"], description: "Web access Ed - test" },
+	        { protocol: "tcp", fromPort: 80,   toPort: 80,   cidrBlocks: ["99.99.99.99/32"], description: "Web access VPN" },
+	        { protocol: "tcp", fromPort: 443,  toPort: 443,  cidrBlocks: ["99.99.99.99/32"], description: "Web access VPN" },
+	        { protocol: "tcp", fromPort: 80,   toPort: 80,   cidrBlocks: ["55.55.55.55/32"], description: "Web access Office" },
+	        { protocol: "tcp", fromPort: 443,  toPort: 443,  cidrBlocks: ["55.55.55.55/32"], description: "Web access Office" },
 	    ],
 	    egress: [{ protocol: "-1", fromPort: 0, toPort: 0, cidrBlocks: ["0.0.0.0/0"] }],
 	})
@@ -514,6 +510,11 @@ if (deployLogging) {
 	    retentionInDays: 30,
 	});
 	
+	// Lets work out the password from the secret store 
+	const grafanaPassword = secrets.grafanaPassword.apply(password => {
+            return password;
+        });
+
 	// Task Def for grafana
 	const grafanaTaskDefinition = new aws.ecs.TaskDefinition("grafana-task", {
 	    family: "grafana-task",
@@ -548,7 +549,7 @@ if (deployLogging) {
 	            ],
 	            environment: [
 	                { name: "GF_SECURITY_ADMIN_USER", value: "admin" },
-	                { name: "GF_SECURITY_ADMIN_PASSWORD", value: "admin99999" },
+	                { name: "GF_SECURITY_ADMIN_PASSWORD", value: `${grafanaPassword}` },
 	                { name: "GF_SERVER_DOMAIN", value: `mon.${dns.domain}` },  // Taken from the projects url domain and 'mon.' added to the start
 			{ name: "GF_REGION", value: `${region}` },
 	            ],

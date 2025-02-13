@@ -4,6 +4,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as network from "./network" ;
 import * as security from "./security" ;
+import * as secrets from "./secrets" ; 
 
 // -------- Get config values --------
 const config = new pulumi.Config();
@@ -40,6 +41,10 @@ if (deployPlatform) {
 	        },
 	    ],
 	});
+
+	const rdsPassword = secrets.rdsPassword.apply(password => {
+	    return password;
+	});
 	
 	// -------- Database --------
 	const rdsConfig = {
@@ -48,7 +53,7 @@ if (deployPlatform) {
 	    port: 3306,
 	    dbName: "db",
 	    username: "admin",
-	    password: "SuperSecretPassword123",
+	    password: rdsPassword,
 	};
 	
 	let dbSubnetGroup: aws.rds.SubnetGroup | undefined;
